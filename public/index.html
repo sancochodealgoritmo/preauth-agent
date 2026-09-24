@@ -5,11 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>PreAuth Agent · Panel Hospital</title>
 <!--
-  DASHBOARD CONECTADO AL BACKEND
-  - fetch() para cargar la lista de casos desde /api/casos
-  - POST /api/procesar/:pageId para disparar el agente
-  - EventSource() para consumir el stream SSE de /api/stream/:caseId
-  - Los informes viven en Notion (Base 1)
+  PANEL DEL HOSPITAL
+  - Envía el formulario PREAUTH-GEN-1.0 (multipart) a POST /api/solicitudes.
+  - El agente procesa automáticamente por cron (no hay disparo manual).
+  - La tabla de casos se refresca desde GET /api/casos cada 15 s.
 -->
 <link rel="stylesheet" href="/styles.css">
 </head>
@@ -33,6 +32,7 @@
       <label for="adj">Adjuntos (PDF, opcional)</label>
       <input type="file" id="adj" accept="application/pdf" multiple>
       <button class="btn" id="enviar">Enviar solicitud</button>
+      <a href="/formulario" download style="display:inline-block;margin-top:10px;color:var(--accent);font-size:13px;font-weight:600;text-decoration:none">⬇️ Descargar formulario PREAUTH-GEN-1.0</a>
     </div>
 
   </div>

@@ -31,6 +31,14 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", uptime: process.uptime(), env: config.env, ts: new Date().toISOString() });
 });
 
+// Descarga del formulario PREAUTH-GEN-1.0 (rellenable) para el hospital.
+app.get("/formulario", (req, res) => {
+  res.download(
+    path.join(__dirname, "..", "formulario-preautorizacion-generico.pdf"),
+    "formulario-preautorizacion-generico.pdf"
+  );
+});
+
 // Ingesta v1.5: recibe el formulario PREAUTH-GEN-1.0 y sus adjuntos (multipart).
 app.post(
   "/api/solicitudes",
