@@ -1,0 +1,567 @@
+{
+  "plantilla": "PREAUTH-GEN-1.0",
+  "pagina_pt": [
+    612.0,
+    792.0
+  ],
+  "reglas_extraccion": {
+    "fechas": "DD/MM/AAAA → ISO AAAA-MM-DD",
+    "numeros": "quitar $ , y espacios; decimal con punto",
+    "numero_documento": "normalizarCedula(): sin espacios ni puntos, mayúsculas",
+    "radio_vacio": "si un campo obligatorio de radio está vacío → DOCUMENTOS_FALTANTES",
+    "prestador": "si no coincide con 'opciones', se guarda tal cual y cae en la validación de red",
+    "firmas": "las 3 zonas deben tener tinta; si falta cualquiera → DOCUMENTOS_FALTANTES"
+  },
+  "campos": [
+    {
+      "campo_pdf": "id_solicitud",
+      "tipo": "text",
+      "etiqueta": "ID Solicitud",
+      "notion": "Informes.ID Solicitud",
+      "obligatorio": true,
+      "max": 13
+    },
+    {
+      "campo_pdf": "fecha_solicitud",
+      "tipo": "date",
+      "etiqueta": "Fecha de solicitud",
+      "notion": null,
+      "obligatorio": false,
+      "formato": "DD/MM/AAAA",
+      "max": 10
+    },
+    {
+      "campo_pdf": "form_version",
+      "tipo": "text",
+      "etiqueta": "Versión de plantilla",
+      "notion": null,
+      "obligatorio": false,
+      "valor_fijo": "PREAUTH-GEN-1.0"
+    },
+    {
+      "campo_pdf": "tipo_servicio",
+      "tipo": "radio",
+      "etiqueta": "Tipo de servicio",
+      "notion": "Informes.Tipo de servicio",
+      "obligatorio": true,
+      "opciones": {
+        "cirugia_ambulatoria": "Cirugía ambulatoria",
+        "hospitalizacion": "Hospitalización",
+        "examen_especial_ambulatorio": "Examen/procedimiento especial ambulatorio",
+        "examen_especial_intrahospitalario": "Examen especial intrahospitalario",
+        "rayos_x_laboratorios": "Rayos X y laboratorios",
+        "extension_dias": "Extensión de días",
+        "interconsulta": "Interconsulta hospitalaria"
+      }
+    },
+    {
+      "campo_pdf": "caracter",
+      "tipo": "radio",
+      "etiqueta": "Carácter",
+      "notion": "Informes.Carácter",
+      "obligatorio": true,
+      "opciones": {
+        "electivo": "Electivo",
+        "urgente": "Urgente"
+      }
+    },
+    {
+      "campo_pdf": "dias_extension",
+      "tipo": "number",
+      "etiqueta": "Días de extensión solicitados",
+      "notion": null,
+      "obligatorio": false,
+      "max": 3
+    },
+    {
+      "campo_pdf": "visitas_interconsulta",
+      "tipo": "number",
+      "etiqueta": "Número de visitas de interconsulta",
+      "notion": null,
+      "obligatorio": false,
+      "max": 3
+    },
+    {
+      "campo_pdf": "motivo_interconsulta_extension",
+      "tipo": "text",
+      "etiqueta": "Motivo de interconsulta o extensión de días",
+      "notion": null,
+      "obligatorio": false
+    },
+    {
+      "campo_pdf": "contratante",
+      "tipo": "text",
+      "etiqueta": "Nombre del contratante",
+      "notion": null,
+      "obligatorio": false
+    },
+    {
+      "campo_pdf": "paciente",
+      "tipo": "text",
+      "etiqueta": "Nombre completo del paciente",
+      "notion": "Informes.Paciente",
+      "obligatorio": true
+    },
+    {
+      "campo_pdf": "poliza_no",
+      "tipo": "text",
+      "etiqueta": "Póliza No.",
+      "notion": "Informes.Póliza No.",
+      "obligatorio": true
+    },
+    {
+      "campo_pdf": "certificado_no",
+      "tipo": "text",
+      "etiqueta": "Certificado No.",
+      "notion": null,
+      "obligatorio": false
+    },
+    {
+      "campo_pdf": "numero_documento",
+      "tipo": "text",
+      "etiqueta": "Cédula o pasaporte (sin espacios)",
+      "notion": "Informes.Cédula",
+      "obligatorio": true
+    },
+    {
+      "campo_pdf": "fecha_nacimiento",
+      "tipo": "date",
+      "etiqueta": "Fecha de nacimiento",
+      "notion": null,
+      "obligatorio": false,
+      "formato": "DD/MM/AAAA",
+      "max": 10
+    },
+    {
+      "campo_pdf": "tipo_documento",
+      "tipo": "radio",
+      "etiqueta": "Tipo de documento",
+      "notion": null,
+      "obligatorio": true,
+      "opciones": {
+        "cedula": "Cédula",
+        "pasaporte": "Pasaporte"
+      }
+    },
+    {
+      "campo_pdf": "sexo",
+      "tipo": "radio",
+      "etiqueta": "Sexo",
+      "notion": null,
+      "obligatorio": true,
+      "opciones": {
+        "F": "F",
+        "M": "M"
+      }
+    },
+    {
+      "campo_pdf": "telefono_paciente",
+      "tipo": "text",
+      "etiqueta": "Teléfono",
+      "notion": null,
+      "obligatorio": false
+    },
+    {
+      "campo_pdf": "email_paciente",
+      "tipo": "text",
+      "etiqueta": "Correo electrónico del paciente",
+      "notion": null,
+      "obligatorio": false
+    },
+    {
+      "campo_pdf": "otro_seguro",
+      "tipo": "radio",
+      "etiqueta": "¿Tiene otro seguro?",
+      "notion": null,
+      "obligatorio": true,
+      "opciones": {
+        "si": true,
+        "no": false
+      }
+    },
+    {
+      "campo_pdf": "otra_aseguradora",
+      "tipo": "text",
+      "etiqueta": "Si marcó Sí: compañía",
+      "notion": null,
+      "obligatorio": false
+    },
+    {
+      "campo_pdf": "origen_condicion",
+      "tipo": "radio",
+      "etiqueta": "La condición se debe a",
+      "notion": "Informes.Origen de la condición",
+      "obligatorio": true,
+      "opciones": {
+        "enfermedad": "Enfermedad",
+        "accidente": "Accidente",
+        "embarazo": "Embarazo",
+        "congenito": "Congénito",
+        "otro": "Otro"
+      }
+    },
+    {
+      "campo_pdf": "origen_otro",
+      "tipo": "text",
+      "etiqueta": "Si marcó Otro: especifique",
+      "notion": null,
+      "obligatorio": false
+    },
+    {
+      "campo_pdf": "fecha_primera_evaluacion",
+      "tipo": "date",
+      "etiqueta": "Fecha de primera evaluación del diagnóstico",
+      "notion": "Informes.Fecha primera evaluación",
+      "obligatorio": true,
+      "formato": "DD/MM/AAAA",
+      "max": 10
+    },
+    {
+      "campo_pdf": "medicos_tratantes_previos",
+      "tipo": "text",
+      "etiqueta": "Médicos que le trataron previamente",
+      "notion": null,
+      "obligatorio": false
+    },
+    {
+      "campo_pdf": "historia_clinica",
+      "tipo": "text",
+      "etiqueta": "Historia de la enfermedad actual, hallazgos anormales, evolución y tratamientos (con fechas)",
+      "notion": "Informes.Justificación",
+      "obligatorio": true
+    },
+    {
+      "campo_pdf": "cie10",
+      "tipo": "text",
+      "etiqueta": "Código(s) CIE-10 (separar con | )",
+      "notion": "Informes.CIE-10",
+      "obligatorio": true
+    },
+    {
+      "campo_pdf": "diagnostico_descripcion",
+      "tipo": "text",
+      "etiqueta": "Descripción del diagnóstico",
+      "notion": "Informes.Diagnóstico (descripción)",
+      "obligatorio": false
+    },
+    {
+      "campo_pdf": "fecha_procedimiento",
+      "tipo": "date",
+      "etiqueta": "Fecha programada",
+      "notion": "Informes.Fecha cirugía",
+      "obligatorio": true,
+      "formato": "DD/MM/AAAA",
+      "max": 10
+    },
+    {
+      "campo_pdf": "cpt",
+      "tipo": "text",
+      "etiqueta": "Código CPT",
+      "notion": "Informes.CPT",
+      "obligatorio": false,
+      "max": 5
+    },
+    {
+      "campo_pdf": "unidades",
+      "tipo": "number",
+      "etiqueta": "Unidades",
+      "notion": null,
+      "obligatorio": false,
+      "max": 3
+    },
+    {
+      "campo_pdf": "procedimiento_descripcion",
+      "tipo": "text",
+      "etiqueta": "Descripción del procedimiento",
+      "notion": "Informes.Procedimiento (texto)",
+      "obligatorio": true
+    },
+    {
+      "campo_pdf": "monto_honorarios",
+      "tipo": "number",
+      "etiqueta": "Honorarios (USD)",
+      "notion": "Informes.Monto solicitado",
+      "obligatorio": true,
+      "max": 10
+    },
+    {
+      "campo_pdf": "lugar_atencion",
+      "tipo": "radio",
+      "etiqueta": "Lugar de atención",
+      "notion": null,
+      "obligatorio": true,
+      "opciones": {
+        "consultorio": "Consultorio",
+        "hospital": "Hospital",
+        "centro_ambulatorio": "Centro ambulatorio"
+      }
+    },
+    {
+      "campo_pdf": "prestador",
+      "tipo": "choice",
+      "etiqueta": "Hospital o centro que atiende",
+      "notion": "Informes.Hospital",
+      "obligatorio": true,
+      "opciones": [
+        "Hospital Nacional",
+        "Hospital Punta Pacífica",
+        "Clínica Hospital San Fernando",
+        "Hospital Paitilla",
+        "Hospital Chiriquí",
+        "Centro Médico Paraíso"
+      ]
+    },
+    {
+      "campo_pdf": "dias_hospitalizacion",
+      "tipo": "number",
+      "etiqueta": "Días de estadía sin complicaciones",
+      "notion": null,
+      "obligatorio": false,
+      "max": 3
+    },
+    {
+      "campo_pdf": "requiere_asistente",
+      "tipo": "radio",
+      "etiqueta": "¿Asistente quirúrgico?",
+      "notion": null,
+      "obligatorio": false,
+      "opciones": {
+        "si": true,
+        "no": false
+      }
+    },
+    {
+      "campo_pdf": "anestesiologo",
+      "tipo": "text",
+      "etiqueta": "Médico anestesiólogo",
+      "notion": null,
+      "obligatorio": false
+    },
+    {
+      "campo_pdf": "asistente_nombre",
+      "tipo": "text",
+      "etiqueta": "Nombre del asistente quirúrgico (si marcó Sí)",
+      "notion": null,
+      "obligatorio": false
+    },
+    {
+      "campo_pdf": "doc_informe_medico_firmado",
+      "tipo": "checkbox",
+      "etiqueta": "Informe médico firmado",
+      "notion": "Informes.Documentos adjuntos",
+      "obligatorio": false,
+      "valor_notion": "Informe médico firmado"
+    },
+    {
+      "campo_pdf": "doc_justificacion_clinica",
+      "tipo": "checkbox",
+      "etiqueta": "Justificación clínica",
+      "notion": "Informes.Documentos adjuntos",
+      "obligatorio": false,
+      "valor_notion": "Justificación clínica"
+    },
+    {
+      "campo_pdf": "doc_examenes_imagen",
+      "tipo": "checkbox",
+      "etiqueta": "Exámenes de imagen (rayos X, TAC, RM, US)",
+      "notion": "Informes.Documentos adjuntos",
+      "obligatorio": false,
+      "valor_notion": "Exámenes de imagen"
+    },
+    {
+      "campo_pdf": "doc_examenes_laboratorio",
+      "tipo": "checkbox",
+      "etiqueta": "Exámenes de laboratorio",
+      "notion": "Informes.Documentos adjuntos",
+      "obligatorio": false,
+      "valor_notion": "Exámenes de laboratorio"
+    },
+    {
+      "campo_pdf": "doc_evaluacion_preanestesica",
+      "tipo": "checkbox",
+      "etiqueta": "Evaluación preanestésica",
+      "notion": "Informes.Documentos adjuntos",
+      "obligatorio": false,
+      "valor_notion": "Evaluación preanestésica"
+    },
+    {
+      "campo_pdf": "doc_segunda_opinion",
+      "tipo": "checkbox",
+      "etiqueta": "Segunda opinión médica",
+      "notion": "Informes.Documentos adjuntos",
+      "obligatorio": false,
+      "valor_notion": "Segunda opinión médica"
+    },
+    {
+      "campo_pdf": "doc_ekg",
+      "tipo": "checkbox",
+      "etiqueta": "Electrocardiograma (EKG)",
+      "notion": "Informes.Documentos adjuntos",
+      "obligatorio": false,
+      "valor_notion": "EKG"
+    },
+    {
+      "campo_pdf": "doc_reporte_urgencia",
+      "tipo": "checkbox",
+      "etiqueta": "Reporte del cuarto de urgencia (obligatorio si es URGENTE)",
+      "notion": "Informes.Documentos adjuntos",
+      "obligatorio": false,
+      "valor_notion": "Reporte de cuarto de urgencia"
+    },
+    {
+      "campo_pdf": "medico_nombre",
+      "tipo": "text",
+      "etiqueta": "Nombre del médico tratante",
+      "notion": "Informes.Médico",
+      "obligatorio": true
+    },
+    {
+      "campo_pdf": "medico_idoneidad",
+      "tipo": "text",
+      "etiqueta": "Registro / idoneidad",
+      "notion": null,
+      "obligatorio": true
+    },
+    {
+      "campo_pdf": "medico_especialidad",
+      "tipo": "text",
+      "etiqueta": "Especialidad",
+      "notion": null,
+      "obligatorio": false
+    },
+    {
+      "campo_pdf": "medico_telefono",
+      "tipo": "text",
+      "etiqueta": "Teléfono del médico",
+      "notion": null,
+      "obligatorio": false
+    },
+    {
+      "campo_pdf": "email_confirmacion",
+      "tipo": "text",
+      "etiqueta": "Correo para enviar la confirmación",
+      "notion": null,
+      "obligatorio": true
+    },
+    {
+      "campo_pdf": "fecha_firma_medico",
+      "tipo": "date",
+      "etiqueta": "Fecha de firma del médico",
+      "notion": null,
+      "obligatorio": true,
+      "formato": "DD/MM/AAAA",
+      "max": 10
+    },
+    {
+      "campo_pdf": "firmante_nombre",
+      "tipo": "text",
+      "etiqueta": "Nombre de quien firma",
+      "notion": null,
+      "obligatorio": true
+    },
+    {
+      "campo_pdf": "fecha_firma_asegurado",
+      "tipo": "date",
+      "etiqueta": "Fecha de firma del asegurado",
+      "notion": null,
+      "obligatorio": true,
+      "formato": "DD/MM/AAAA",
+      "max": 10
+    },
+    {
+      "campo_pdf": "firmante_relacion",
+      "tipo": "radio",
+      "etiqueta": "Firma en calidad de",
+      "notion": null,
+      "obligatorio": true,
+      "opciones": {
+        "asegurado": "Asegurado",
+        "representante": "Representante"
+      }
+    },
+    {
+      "campo_pdf": "decision",
+      "tipo": "radio",
+      "etiqueta": "Decisión",
+      "notion": "Solicitudes.Decisión",
+      "obligatorio": false,
+      "opciones": {
+        "aprobado": "APROBADO",
+        "aprobado_condicion": "APROBADO_CON_CONDICION",
+        "segunda_opinion": "SEGUNDA_OPINION",
+        "declinado": "RECHAZADO",
+        "documentos_faltantes": "DOCUMENTOS_FALTANTES"
+      }
+    },
+    {
+      "campo_pdf": "codigo_aut",
+      "tipo": "text",
+      "etiqueta": "Código de autorización",
+      "notion": "Solicitudes.Código AUT",
+      "obligatorio": false
+    },
+    {
+      "campo_pdf": "observaciones",
+      "tipo": "text",
+      "etiqueta": "Observaciones / condición / cláusula",
+      "notion": "Solicitudes.Motivo",
+      "obligatorio": false
+    }
+  ],
+  "zonas_firma": [
+    {
+      "clave": "firma_medico",
+      "etiqueta": "FIRMA DEL MÉDICO *",
+      "pagina": 2,
+      "rect_pt": [
+        36,
+        344.6,
+        279.0,
+        406.6
+      ],
+      "rect_rel": [
+        0.0588,
+        0.4866,
+        0.4559,
+        0.5649
+      ],
+      "notion": "Informes.Firma médico"
+    },
+    {
+      "clave": "sello",
+      "etiqueta": "SELLO DEL MÉDICO O DEL CENTRO *",
+      "pagina": 2,
+      "rect_pt": [
+        289.0,
+        344.6,
+        451.0,
+        406.6
+      ],
+      "rect_rel": [
+        0.4722,
+        0.4866,
+        0.7369,
+        0.5649
+      ],
+      "notion": "Informes.Sello presente"
+    },
+    {
+      "clave": "firma_asegurado",
+      "etiqueta": "FIRMA DEL ASEGURADO O PERSONA AUTORIZADA *",
+      "pagina": 2,
+      "rect_pt": [
+        36,
+        182.8,
+        360.0,
+        234.8
+      ],
+      "rect_rel": [
+        0.0588,
+        0.7035,
+        0.5882,
+        0.7692
+      ],
+      "notion": "Informes.Firma asegurado"
+    }
+  ]
+}

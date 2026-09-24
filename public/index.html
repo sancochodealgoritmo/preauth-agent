@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PreAuth Agent · Panel Hospital</title>
+<!--
+  DASHBOARD CONECTADO AL BACKEND
+  - fetch() para cargar la lista de casos desde /api/casos
+  - POST /api/procesar/:pageId para disparar el agente
+  - EventSource() para consumir el stream SSE de /api/stream/:caseId
+  - Los informes viven en Notion (Base 1)
+-->
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<header>
+  <h1>PreAuth Agent</h1>
+  <span class="sub">Pre-autorización quirúrgica en tiempo real</span>
+  <span class="spacer"></span>
+  <span class="badge">EN VIVO</span>
+</header>
+
+<main>
+<div class="grid">
+
+  <div>
+    <div class="card">
+      <h2>Enviar formulario</h2>
+      <label for="frm">Formulario PREAUTH-GEN-1.0 (PDF)</label>
+      <input type="file" id="frm" accept="application/pdf">
+      <label for="adj">Adjuntos (PDF, opcional)</label>
+      <input type="file" id="adj" accept="application/pdf" multiple>
+      <button class="btn" id="enviar">Enviar solicitud</button>
+    </div>
+
+  </div>
+
+  <div>
+    <div class="card mt hide" id="resCard">
+      <h2>Resolución</h2>
+      <div id="verdict"></div>
+    </div>
+
+    <div class="card mt hide" id="traceCard">
+      <h2>Trazabilidad</h2>
+      <div class="cols">
+        <div class="panel">
+          <h3>Informe recibido</h3>
+          <div class="body"><pre class="doc" id="docText"></pre></div>
+        </div>
+        <div>
+          <div class="panel">
+            <h3>Extracción · N1 <span class="tag-ia">IA lee</span></h3>
+            <div class="body" id="fields"></div>
+          </div>
+          <div class="panel" style="margin-top:12px">
+            <h3>Interpretación clínica · N1b <span class="tag-ia">IA decide</span></h3>
+            <div class="body" id="interp"></div>
+          </div>
+          <div class="panel" style="margin-top:12px">
+            <h3>Motor de reglas · N3 <span class="tag-det">sin IA</span></h3>
+            <div class="body" id="rules"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mt">
+  <h2>Casos procesados
+    <button class="btn-ghost" id="refresh-list" style="width:auto;margin-left:12px;padding:6px 10px;display:inline-block">🔄 Refrescar</button>
+  </h2>
+  <div id="tabla"><div class="empty">Todavía no hay casos procesados.</div></div>
+</div>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>
