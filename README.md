@@ -85,9 +85,6 @@ WEBHOOK_SECRET
 - `npm start` — producción
 - `npm run dev` — modo watch
 - `npm run bench` — latencia R1 vs V3
-- `node scripts/generarManuales.js` — genera los 3 manuales PDF en `docs/manuales/`
-- `node scripts/reiniciarCasos.js` — archiva todas las preautorizaciones (sistema en 0)
-- `node scripts/procesarLote.js --reset` — reenvía los 17 escenarios de prueba
 
 ## API
 
