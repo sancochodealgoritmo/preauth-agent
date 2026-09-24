@@ -22,17 +22,23 @@ const cache = { poliza: [], catalogo: [], prestador: [] };
 const editando = { poliza: null, catalogo: null, prestador: null };
 
 /* ── Pestañas ───────────────────────────────────────────────────── */
-$$('.tab').forEach((b) =>
-  b.onclick = () => {
-    $$('.tab').forEach((t) => t.classList.remove('active'));
-    b.classList.add('active');
-    $('#aseguradora').classList.toggle('hide', b.dataset.tab !== 'aseguradora');
-    $('#revision').classList.toggle('hide', b.dataset.tab !== 'revision');
-    $('#configuracion').classList.toggle('hide', b.dataset.tab !== 'configuracion');
-    if (b.dataset.tab === 'revision') cargarEscalados();
-    if (b.dataset.tab === 'configuracion') cargarConfiguracion();
-  }
-);
+const PANES = ['aseguradora', 'revision', 'configuracion'];
+
+function activarTab(nombre) {
+  const b = document.querySelector(`.tab[data-tab="${nombre}"]`);
+  if (!b) return;
+  $$('.tab').forEach((t) => t.classList.remove('active'));
+  b.classList.add('active');
+  for (const p of PANES) $('#' + p).classList.toggle('hide', p !== nombre);
+  if (nombre === 'revision') cargarEscalados();
+  if (nombre === 'configuracion') cargarConfiguracion();
+  if (location.hash !== '#' + nombre) history.replaceState(null, '', '#' + nombre);
+}
+
+$$('.tab').forEach((b) => (b.onclick = () => activarTab(b.dataset.tab)));
+
+// Abrir la pestaña indicada en el hash (#aseguradora | #revision | #configuracion).
+activarTab(PANES.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'aseguradora');
 
 /* ── Estado de edición ──────────────────────────────────────────── */
 function setEdicion(entidad, id, label) {
