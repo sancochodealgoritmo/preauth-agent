@@ -163,49 +163,50 @@ $('#reenviarFiles').addEventListener('change', async (ev) => {
   cargarCasos();
 });
 
-/* ── Enviar formularios (múltiple, arrastrar y soltar) ─────────── */
-let archivos = [];
+/* ── Enviar solicitud (formularios + adjuntos con drag & drop) ── */
+let formularios = [];
+let adjuntos = [];
 
-function pintarArchivos() {
-  const lista = $('#fileList');
-  if (!archivos.length) {
-    lista.innerHTML = '';
-    $('#enviar').disabled = true;
-    return;
-  }
-  lista.innerHTML = archivos.map((f, i) => `<div class="fileitem"><span>${escapar(f.name)}</span><button class="fileitem-x" data-i="${i}" type="button">×</button></div>`).join('');
-  $('#enviar').disabled = false;
-  lista.querySelectorAll('.fileitem-x').forEach((b) =>
-    b.onclick = () => { archivos.splice(Number(b.dataset.i), 1); pintarArchivos(); }
+function pintarLista(contenedor, arr, onUpdate) {
+  contenedor.innerHTML = arr.length
+    ? arr.map((f, i) => `<div class="fileitem"><span>${escapar(f.name)}</span><button class="fileitem-x" data-i="${i}" type="button">×</button></div>`).join('')
+    : '';
+  contenedor.querySelectorAll('.fileitem-x').forEach((b) =>
+    b.onclick = () => { arr.splice(Number(b.dataset.i), 1); pintarLista(contenedor, arr, onUpdate); onUpdate(); }
   );
 }
 
-function agregarArchivos(fileList) {
-  for (const f of fileList) {
-    if (f.type !== 'application/pdf') continue;
-    archivos.push(f);
-  }
-  pintarArchivos();
+function actualizarEnviar() {
+  $('#enviar').disabled = !formularios.length;
 }
 
-const dz = $('#dropzone');
-if (dz) {
-  dz.onclick = () => $('#frm').click();
+function configurarDropzone(id, store, listaId, onUpdate) {
+  const dz = $('#' + id);
+  const input = dz.querySelector('input[type="file"]');
+  const lista = $('#' + listaId);
+  const refrescar = () => { pintarLista(lista, store, onUpdate); onUpdate(); };
+  const agregar = (fileList) => {
+    for (const f of fileList) if (f.type === 'application/pdf') store.push(f);
+    refrescar();
+  };
+  dz.onclick = () => input.click();
   dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('drag'); };
   dz.ondragleave = () => dz.classList.remove('drag');
-  dz.ondrop = (e) => { e.preventDefault(); dz.classList.remove('drag'); agregarArchivos(e.dataTransfer.files); };
-  $('#frm').onchange = () => { agregarArchivos($('#frm').files); $('#frm').value = ''; };
+  dz.ondrop = (e) => { e.preventDefault(); dz.classList.remove('drag'); agregar(e.dataTransfer.files); };
+  input.onchange = () => { agregar(input.files); input.value = ''; };
 }
 
-async function enviarFormularios() {
-  if (!archivos.length) return;
+configurarDropzone('drop-form', formularios, 'formList', actualizarEnviar);
+configurarDropzone('drop-adj', adjuntos, 'adjList', () => {});
+
+async function enviarSolicitudes() {
+  if (!formularios.length) return;
   $('#enviar').disabled = true;
-  const total = archivos.length;
   let ok = 0;
-  for (let i = 0; i < total; i++) {
-    const f = archivos[i];
+  for (const f of formularios) {
     const fd = new FormData();
     fd.append('formulario', f);
+    for (const a of adjuntos) fd.append('adjuntos', a);
     try {
       const r = await fetch('/api/solicitudes', { method: 'POST', body: fd });
       const j = await r.json();
@@ -215,14 +216,17 @@ async function enviarFormularios() {
       alert(`Error en "${f.name}": ` + e.message);
     }
   }
-  alert(`Enviadas ${ok}/${total} solicitudes. El agente las procesará automáticamente.`);
-  archivos = [];
-  pintarArchivos();
+  alert(`Enviadas ${ok}/${formularios.length} solicitudes. El agente las procesará automáticamente.`);
+  formularios = [];
+  adjuntos = [];
+  pintarLista($('#formList'), formularios, actualizarEnviar);
+  pintarLista($('#adjList'), adjuntos, () => {});
+  actualizarEnviar();
   cargarCasos();
 }
 
 /* ── Arranque ─────────────────────────────────────────────────── */
-$('#enviar').onclick = enviarFormularios;
+$('#enviar').onclick = enviarSolicitudes;
 $('#refresh-list').onclick = cargarCasos;
 
 cargarCasos();

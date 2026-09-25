@@ -95,7 +95,9 @@ tbody tr:hover td{background:#fafbfc;cursor:pointer}
 .pill.PENDIENTE{background:var(--ia-bg);color:var(--ia)}
 .pill.cola{background:var(--ia-bg);color:var(--ia);animation:pulse 1.2s ease-in-out infinite}
 .estado-cola{margin-left:12px;font-size:12.5px;color:var(--ia);font-weight:600;animation:pulse 1.2s ease-in-out infinite}
-.dropzone{border:2px dashed var(--line);border-radius:10px;padding:26px 16px;text-align:center;color:var(--muted);font-size:13.5px;cursor:pointer;transition:border-color .15s ease,background .15s ease}
+.dz-label{display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:12px 0 6px}
+.dz-label:first-of-type{margin-top:0}
+.dropzone{border:2px dashed var(--line);border-radius:10px;padding:18px 14px;text-align:center;color:var(--muted);font-size:13px;cursor:pointer;transition:border-color .15s ease,background .15s ease}
 .dropzone.drag,.dropzone:hover{border-color:var(--accent);background:var(--accent-soft)}
 .dropzone p{margin:0}
 .filelist{margin-top:10px;display:flex;flex-direction:column;gap:6px}
