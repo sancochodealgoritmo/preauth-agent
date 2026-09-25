@@ -163,8 +163,8 @@ $('#reenviarFiles').addEventListener('change', async (ev) => {
   cargarCasos();
 });
 
-/* ── Enviar solicitud (formularios + adjuntos con drag & drop) ── */
-let formularios = [];
+/* ── Enviar solicitud (1 formulario + adjuntos con drag & drop) ── */
+let formulario = null;
 let adjuntos = [];
 
 function pintarLista(contenedor, arr, onUpdate) {
@@ -177,56 +177,77 @@ function pintarLista(contenedor, arr, onUpdate) {
 }
 
 function actualizarEnviar() {
-  $('#enviar').disabled = !formularios.length;
+  $('#enviar').disabled = !formulario;
 }
 
-function configurarDropzone(id, store, listaId, onUpdate) {
-  const dz = $('#' + id);
-  const input = dz.querySelector('input[type="file"]');
-  const lista = $('#' + listaId);
-  const refrescar = () => { pintarLista(lista, store, onUpdate); onUpdate(); };
-  const agregar = (fileList) => {
-    for (const f of fileList) if (f.type === 'application/pdf') store.push(f);
-    refrescar();
-  };
-  dz.onclick = () => input.click();
-  dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('drag'); };
-  dz.ondragleave = () => dz.classList.remove('drag');
-  dz.ondrop = (e) => { e.preventDefault(); dz.classList.remove('drag'); agregar(e.dataTransfer.files); };
-  input.onchange = () => { agregar(input.files); input.value = ''; };
-}
-
-configurarDropzone('drop-form', formularios, 'formList', actualizarEnviar);
-configurarDropzone('drop-adj', adjuntos, 'adjList', () => {});
-
-async function enviarSolicitudes() {
-  if (!formularios.length) return;
-  $('#enviar').disabled = true;
-  let ok = 0;
-  for (const f of formularios) {
-    const fd = new FormData();
-    fd.append('formulario', f);
-    for (const a of adjuntos) fd.append('adjuntos', a);
-    try {
-      const r = await fetch('/api/solicitudes', { method: 'POST', body: fd });
-      const j = await r.json();
-      if (!r.ok) throw new Error(j.error || 'HTTP ' + r.status);
-      ok++;
-    } catch (e) {
-      alert(`Error en "${f.name}": ` + e.message);
-    }
+function pintarFormulario() {
+  const cont = $('#formList');
+  if (!formulario) {
+    cont.innerHTML = '';
+    actualizarEnviar();
+    return;
   }
-  alert(`Enviadas ${ok}/${formularios.length} solicitudes. El agente las procesará automáticamente.`);
-  formularios = [];
-  adjuntos = [];
-  pintarLista($('#formList'), formularios, actualizarEnviar);
-  pintarLista($('#adjList'), adjuntos, () => {});
+  cont.innerHTML = `<div class="fileitem"><span>${escapar(formulario.name)}</span><button class="fileitem-x" type="button">×</button></div>`;
+  cont.querySelector('.fileitem-x').onclick = () => { formulario = null; pintarFormulario(); };
   actualizarEnviar();
-  cargarCasos();
+}
+
+function fijarFormulario(fileList) {
+  for (const f of fileList) {
+    if (f.type === 'application/pdf') { formulario = f; break; }
+  }
+  pintarFormulario();
+}
+
+const dzForm = $('#drop-form');
+if (dzForm) {
+  const input = dzForm.querySelector('input[type="file"]');
+  dzForm.onclick = () => input.click();
+  dzForm.ondragover = (e) => { e.preventDefault(); dzForm.classList.add('drag'); };
+  dzForm.ondragleave = () => dzForm.classList.remove('drag');
+  dzForm.ondrop = (e) => { e.preventDefault(); dzForm.classList.remove('drag'); fijarFormulario(e.dataTransfer.files); };
+  input.onchange = () => { fijarFormulario(input.files); input.value = ''; };
+}
+
+const dzAdj = $('#drop-adj');
+if (dzAdj) {
+  const inputAdj = dzAdj.querySelector('input[type="file"]');
+  const agregarAdjuntos = (fileList) => {
+    for (const f of fileList) if (f.type === 'application/pdf') adjuntos.push(f);
+    pintarLista($('#adjList'), adjuntos, () => {});
+  };
+  dzAdj.onclick = () => inputAdj.click();
+  dzAdj.ondragover = (e) => { e.preventDefault(); dzAdj.classList.add('drag'); };
+  dzAdj.ondragleave = () => dzAdj.classList.remove('drag');
+  dzAdj.ondrop = (e) => { e.preventDefault(); dzAdj.classList.remove('drag'); agregarAdjuntos(e.dataTransfer.files); };
+  inputAdj.onchange = () => { agregarAdjuntos(inputAdj.files); inputAdj.value = ''; };
+}
+
+async function enviarSolicitud() {
+  if (!formulario) return;
+  $('#enviar').disabled = true;
+  const fd = new FormData();
+  fd.append('formulario', formulario);
+  for (const a of adjuntos) fd.append('adjuntos', a);
+  try {
+    const r = await fetch('/api/solicitudes', { method: 'POST', body: fd });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'HTTP ' + r.status);
+    alert('Solicitud recibida: ' + j.idSolicitud + ' — el agente la procesará automáticamente.');
+    formulario = null;
+    adjuntos = [];
+    pintarFormulario();
+    pintarLista($('#adjList'), adjuntos, () => {});
+    actualizarEnviar();
+    cargarCasos();
+  } catch (e) {
+    alert('Error al enviar: ' + e.message);
+  }
+  $('#enviar').disabled = !formulario;
 }
 
 /* ── Arranque ─────────────────────────────────────────────────── */
-$('#enviar').onclick = enviarSolicitudes;
+$('#enviar').onclick = enviarSolicitud;
 $('#refresh-list').onclick = cargarCasos;
 
 cargarCasos();
