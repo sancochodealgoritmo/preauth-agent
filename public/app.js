@@ -98,14 +98,19 @@ function pintarResultado(r) {
 function pintarTabla(data) {
   if (!data?.length) {
     $('#tabla').innerHTML = '<div class="empty">Todavía no hay casos procesados.</div>';
+    const cola = $('#estado-cola');
+    if (cola) cola.innerHTML = '';
     return;
   }
+  const enCola = data.filter((d) => d.estado === 'Pendiente').length;
+  const cola = $('#estado-cola');
+  if (cola) cola.innerHTML = enCola ? `El agente está trabajando… ${enCola} en cola` : '';
   $('#tabla').innerHTML = `<div class="tablewrap"><table>
     <thead><tr><th>Caso</th><th>Afiliado</th><th>Decisión</th><th>Modalidad</th><th>Modelo</th><th>Tiempo</th><th></th></tr></thead>
     <tbody>${data.map((d) => `<tr data-id="${d.id}">
       <td style="font-family:var(--mono);font-size:12px">${escapar(d.idSolicitud || '—')}</td>
       <td>${escapar(d.paciente || '—')}</td>
-      <td><span class="pill ${d.decision || 'PENDIENTE'}">${(d.decision || 'PENDIENTE').replace(/_/g, ' ')}</span></td>
+      <td>${d.estado === 'Pendiente' ? '<span class="pill cola">En cola…</span>' : `<span class="pill ${d.decision || 'PENDIENTE'}">${(d.decision || 'PENDIENTE').replace(/_/g, ' ')}</span>`}</td>
       <td>${escapar(d.modalidad || '—')}</td>
       <td>${d.modelo ? `<span class="model-badge ${d.modelo}">${escapar(d.modelo)}</span>` : '—'}</td>
       <td style="font-family:var(--mono)">${d.latencia_ms ? (d.latencia_ms / 1000).toFixed(2) + ' s' : (d.timestamp ? new Date(d.timestamp).toLocaleTimeString() : '—')}</td>
@@ -136,17 +141,27 @@ function pintarTabla(data) {
   });
 }
 
-async function reenviar(id) {
-  if (!confirm('¿Reenviar esta solicitud con los documentos corregidos?')) return;
-  const r = await fetch(`/api/solicitudes/${id}/reenviar`, { method: 'POST' });
+function reenviar(id) {
+  const input = $('#reenviarFiles');
+  input.dataset.id = id;
+  input.value = '';
+  input.click();
+}
+
+$('#reenviarFiles').addEventListener('change', async (ev) => {
+  const id = ev.target.dataset.id;
+  if (!id || !ev.target.files.length) return;
+  const fd = new FormData();
+  for (const f of ev.target.files) fd.append('adjuntos', f);
+  const r = await fetch(`/api/solicitudes/${id}/reenviar`, { method: 'POST', body: fd });
   if (!r.ok) {
     const j = await r.json().catch(() => ({}));
     alert('Error al reenviar: ' + (j.error || r.status));
     return;
   }
-  alert('Solicitud reenviada para reprocesamiento.');
+  alert('Documentos adjuntados y solicitud reenviada para reprocesamiento.');
   cargarCasos();
-}
+});
 
 /* ── Enviar formulario ─────────────────────────────────────────── */
 async function enviarFormulario() {

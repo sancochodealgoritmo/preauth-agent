@@ -72,11 +72,13 @@
 <div class="card mt">
   <h2>Casos procesados
     <button class="btn-ghost" id="refresh-list" style="width:auto;margin-left:12px;padding:6px 10px;display:inline-block">🔄 Refrescar</button>
+    <span id="estado-cola" class="estado-cola"></span>
   </h2>
   <div id="tabla"><div class="empty">Todavía no hay casos procesados.</div></div>
 </div>
 </main>
 
+<input type="file" id="reenviarFiles" multiple accept="application/pdf" style="display:none">
 <script src="/app.js"></script>
 </body>
 </html>

@@ -24,6 +24,7 @@ export async function listarSolicitudesRecientes(limite = 50) {
       id: p.id,
       idSolicitud: extraer.rich_text(props["ID Solicitud"]),
       paciente: extraer.rich_text(props["Paciente"]),
+      estado: extraer.select(props["Estado"]),
       decision: extraer.select(props["Decisión"]) || extraer.select(props["Estado"]) || "PENDIENTE",
       modelo: extraer.select(props["Modelo"]),
       latencia_ms: extraer.number(props["Latencia (ms)"]),

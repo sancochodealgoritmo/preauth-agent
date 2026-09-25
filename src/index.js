@@ -59,10 +59,11 @@ app.post(
   }
 );
 
-// Reenvío documental: devuelve un caso Reenviado a Pendiente con Iteración+1.
-app.post("/api/solicitudes/:pageId/reenviar", async (req, res) => {
+// Reenvío documental: anexa documentos corregidos y devuelve el caso a Pendiente.
+app.post("/api/solicitudes/:pageId/reenviar", upload.array("adjuntos", 20), async (req, res) => {
   try {
-    await reenviarPreautorizacion(req.params.pageId);
+    const adjuntos = (req.files || []).map((f) => ({ buffer: f.buffer, nombre: f.originalname }));
+    await reenviarPreautorizacion(req.params.pageId, adjuntos);
     res.json({ ok: true });
   } catch (e) {
     res.status(400).json({ error: e.message });

@@ -285,7 +285,7 @@ export async function resolverEscalado(pageId, nota) {
 
 // ── Reenvío documental: devuelve un caso Reenviado a Pendiente ────
 
-export async function reenviarPreautorizacion(pageId) {
+export async function reenviarPreautorizacion(pageId, adjuntos = []) {
   const page = await consultarNotion(() => notion.pages.retrieve({ page_id: pageId }));
   const estado = extraer.select(page.properties["Estado"]);
   const decision = extraer.select(page.properties["Decisión"]);
@@ -294,13 +294,20 @@ export async function reenviarPreautorizacion(pageId) {
   }
   const iteracion = extraer.number(page.properties["Iteración"]) ?? 1;
   const nuevaIteracion = Math.min(iteracion + 1, config.maxIteraciones);
-  return consultarNotion(() =>
-    notion.pages.update({
-      page_id: pageId,
-      properties: {
-        "Estado": seleccion("Pendiente"),
-        "Iteración": numero(nuevaIteracion),
-      },
-    })
-  );
+
+  // Anexa los documentos corregidos a la propiedad "Adjuntos" (conservando los previos).
+  const adjuntosPrevios = page.properties["Adjuntos"]?.files ?? [];
+  const nuevos = [];
+  for (const a of adjuntos || []) {
+    const f = await subirArchivoNotion(a.buffer, a.nombre);
+    if (f) nuevos.push(f);
+  }
+
+  const propiedades = {
+    "Estado": seleccion("Pendiente"),
+    "Iteración": numero(nuevaIteracion),
+  };
+  if (nuevos.length) propiedades["Adjuntos"] = { files: [...adjuntosPrevios, ...nuevos] };
+
+  return consultarNotion(() => notion.pages.update({ page_id: pageId, properties: propiedades }));
 }
