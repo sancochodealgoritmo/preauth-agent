@@ -240,7 +240,7 @@ async function guardar(ent, form, serializar) {
       alert('Error al guardar: ' + (j.error || r.status));
       return;
     }
-    $('#hint-config').textContent = 'Guardado ✓';
+    $('#hint-config').textContent = 'Guardado';
     setTimeout(() => { $('#hint-config').textContent = ''; }, 2500);
   };
   
@@ -248,7 +248,7 @@ async function guardar(ent, form, serializar) {
     if (!confirm('¿Restablecer todos los valores y el prompt a los valores por defecto?')) return;
     const r = await fetch('/api/admin/configuracion/reset', { method: 'POST' });
     if (r.ok) {
-      $('#hint-config').textContent = 'Restablecido ✓';
+      $('#hint-config').textContent = 'Restablecido';
       cargarConfiguracion();
       setTimeout(() => { $('#hint-config').textContent = ''; }, 2500);
     }

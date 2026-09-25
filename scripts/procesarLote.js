@@ -30,7 +30,7 @@ async function archivarTodas() {
     }
     cursor = res.has_more ? res.next_cursor : undefined;
   } while (cursor);
-  console.log(`🧹 Archivadas ${total} fila(s) existentes en Preautorizaciones`);
+  console.log(`Archivadas ${total} fila(s) existentes en Preautorizaciones`);
 }
 
 async function enviarCarpeta(idFolder) {
@@ -66,10 +66,10 @@ for (const c of carpetas) {
   try {
     const j = await enviarCarpeta(c);
     resultados.push({ ok: true, folder: c, idSolicitud: j.idSolicitud, faltantes: j.faltantes?.length ?? 0 });
-    console.log(`✅ ${c} → ${j.idSolicitud} (faltantes: ${j.faltantes?.length ?? 0})`);
+    console.log(`${c} → ${j.idSolicitud} (faltantes: ${j.faltantes?.length ?? 0})`);
   } catch (e) {
     resultados.push({ ok: false, folder: c, error: e.message });
-    console.error(`❌ ${c} → ${e.message}`);
+    console.error(`${c} → ${e.message}`);
   }
 }
 

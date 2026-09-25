@@ -140,7 +140,7 @@ async function generar({ archivo, titulo, subtitulo, bloques }) {
   const bytes = await doc.save();
   const destino = path.join(OUT, archivo);
   fs.writeFileSync(destino, bytes);
-  console.log("✔ " + destino + " (" + bytes.length + " bytes)");
+  console.log(destino + " (" + bytes.length + " bytes)");
 }
 
 for (const m of manuales) await generar(m);

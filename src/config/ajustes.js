@@ -2,6 +2,7 @@
 // Los escalares viven como filas Clave/Valor; el prompt del sistema vive en los bloques
 // de la página "promptSistema" (para no chocar con el límite de 2000 de rich_text).
 import { config } from "../config.js";
+import { DEFAULTS } from "./defaults.js";
 import { notion, consultarNotion } from "../notion/client.js";
 import { log } from "../utils/logger.js";
 import { SYSTEM_PROMPT } from "../agent/prompts.js";
@@ -16,18 +17,18 @@ const E = "entero";
 const T = "texto";
 
 export const AJUSTES = [
-  { clave: "umbralConfianza", tipo: N, etiqueta: "Umbral de confianza (CPT, 0-1)", def: 0.8, min: 0, max: 1, paso: 0.05, aplicar: (v) => (config.umbralConfianza = v) },
-  { clave: "umbralTinta", tipo: N, etiqueta: "Umbral de tinta (firma/sello, 0-0.02)", def: 0.004, min: 0, max: 0.02, paso: 0.001, aplicar: (v) => (config.umbralTinta = v) },
-  { clave: "maxIteraciones", tipo: E, etiqueta: "Iteraciones documentales (1-5)", def: 3, min: 1, max: 5, paso: 1, aplicar: (v) => (config.maxIteraciones = v) },
-  { clave: "timeoutR1", tipo: E, etiqueta: "Timeout R1 (ms)", def: 45000, min: 5000, max: 180000, paso: 1000, aplicar: (v) => (config.timeouts.r1 = v) },
-  { clave: "timeoutV3", tipo: E, etiqueta: "Timeout V3 (ms)", def: 30000, min: 5000, max: 180000, paso: 1000, aplicar: (v) => (config.timeouts.v3 = v) },
-  { clave: "timeoutNotion", tipo: E, etiqueta: "Timeout Notion (ms)", def: 20000, min: 5000, max: 120000, paso: 1000, aplicar: (v) => (config.timeouts.notion = v) },
-  { clave: "rateLimitNotion", tipo: E, etiqueta: "Rate limit Notion (req/s)", def: 3, min: 1, max: 10, paso: 1, aplicar: (v) => (config.rateLimitNotion.porSegundo = v) },
-  { clave: "cacheTtlMs", tipo: E, etiqueta: "TTL cache catálogo (ms)", def: 300000, min: 10000, max: 3600000, paso: 10000, aplicar: (v) => (config.cacheTtlMs = v) },
-  { clave: "modeloPrimario", tipo: T, etiqueta: "Modelo primario", def: "deepseek-reasoner", aplicar: (v) => (config.deepseek.modeloPrimario = v) },
-  { clave: "modeloFallback", tipo: T, etiqueta: "Modelo fallback", def: "deepseek-chat", aplicar: (v) => (config.deepseek.modeloFallback = v) },
-  { clave: "temperatura", tipo: N, etiqueta: "Temperatura (0-1)", def: 0.1, min: 0, max: 1, paso: 0.05, aplicar: (v) => (config.deepseek.temperatura = v) },
-  { clave: "rulesVersion", tipo: T, etiqueta: "Versión de reglas", def: "reglas-2026.09.23", aplicar: (v) => (config.rulesVersion = v) },
+  { clave: "umbralConfianza", tipo: N, etiqueta: "Umbral de confianza (CPT, 0-1)", def: DEFAULTS.umbralConfianza, min: 0, max: 1, paso: 0.05, aplicar: (v) => (config.umbralConfianza = v) },
+  { clave: "umbralTinta", tipo: N, etiqueta: "Umbral de tinta (firma/sello, 0-0.02)", def: DEFAULTS.umbralTinta, min: 0, max: 0.02, paso: 0.001, aplicar: (v) => (config.umbralTinta = v) },
+  { clave: "maxIteraciones", tipo: E, etiqueta: "Iteraciones documentales (1-5)", def: DEFAULTS.maxIteraciones, min: 1, max: 5, paso: 1, aplicar: (v) => (config.maxIteraciones = v) },
+  { clave: "timeoutR1", tipo: E, etiqueta: "Timeout R1 (ms)", def: DEFAULTS.timeouts.r1, min: 5000, max: 180000, paso: 1000, aplicar: (v) => (config.timeouts.r1 = v) },
+  { clave: "timeoutV3", tipo: E, etiqueta: "Timeout V3 (ms)", def: DEFAULTS.timeouts.v3, min: 5000, max: 180000, paso: 1000, aplicar: (v) => (config.timeouts.v3 = v) },
+  { clave: "timeoutNotion", tipo: E, etiqueta: "Timeout Notion (ms)", def: DEFAULTS.timeouts.notion, min: 5000, max: 120000, paso: 1000, aplicar: (v) => (config.timeouts.notion = v) },
+  { clave: "rateLimitNotion", tipo: E, etiqueta: "Rate limit Notion (req/s)", def: DEFAULTS.rateLimitNotion.porSegundo, min: 1, max: 10, paso: 1, aplicar: (v) => (config.rateLimitNotion.porSegundo = v) },
+  { clave: "cacheTtlMs", tipo: E, etiqueta: "TTL cache catálogo (ms)", def: DEFAULTS.cacheTtlMs, min: 10000, max: 3600000, paso: 10000, aplicar: (v) => (config.cacheTtlMs = v) },
+  { clave: "modeloPrimario", tipo: T, etiqueta: "Modelo primario", def: DEFAULTS.deepseek.modeloPrimario, aplicar: (v) => (config.deepseek.modeloPrimario = v) },
+  { clave: "modeloFallback", tipo: T, etiqueta: "Modelo fallback", def: DEFAULTS.deepseek.modeloFallback, aplicar: (v) => (config.deepseek.modeloFallback = v) },
+  { clave: "temperatura", tipo: N, etiqueta: "Temperatura (0-1)", def: DEFAULTS.deepseek.temperatura, min: 0, max: 1, paso: 0.05, aplicar: (v) => (config.deepseek.temperatura = v) },
+  { clave: "rulesVersion", tipo: T, etiqueta: "Versión de reglas", def: DEFAULTS.rulesVersion, aplicar: (v) => (config.rulesVersion = v) },
 ];
 
 const porClave = Object.fromEntries(AJUSTES.map((m) => [m.clave, m]));
@@ -104,7 +105,7 @@ export async function sincronizar() {
   try {
     const a = await leerAjustes();
     aplicarAjustes(a);
-    log.info("⚙️ Configuración del agente sincronizada desde Notion");
+    log.info("Configuración del agente sincronizada desde Notion");
   } catch (e) {
     log.warn("No se pudo sincronizar la configuración; se usan valores por defecto: " + e.message);
   }

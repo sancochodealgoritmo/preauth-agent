@@ -19,7 +19,7 @@ export async function analizarSolicitud({ informe, poliza, catalogo, procedimien
 
   const t0 = Date.now();
   try {
-    log.info("🧠 Consultando DeepSeek R1...");
+    log.info("Consultando DeepSeek R1...");
     const res = await client.chat.completions.create({
       model: config.deepseek.modeloPrimario,
       messages,

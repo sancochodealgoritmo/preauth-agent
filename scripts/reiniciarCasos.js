@@ -18,4 +18,4 @@ do {
   cursor = res.has_more ? res.next_cursor : undefined;
 } while (cursor);
 
-console.log(`🧹 Archivadas ${total} fila(s) de Preautorizaciones. Sistema en 0.`);
+console.log(`Archivadas ${total} fila(s) de Preautorizaciones. Sistema en 0.`);

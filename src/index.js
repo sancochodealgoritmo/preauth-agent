@@ -132,7 +132,7 @@ cron.schedule("*/30 * * * * *", async () => {
 sincronizar(); // Carga la configuración del agente desde Notion (no bloquea el arranque).
 
 app.listen(config.port, "127.0.0.1", () => {
-  log.ok(`🚀 PreAuth Agent escuchando en http://127.0.0.1:${config.port}`);
+  log.ok(`PreAuth Agent escuchando en http://127.0.0.1:${config.port}`);
   log.info(`Ambiente: ${config.env}`);
 });
 

@@ -2,7 +2,7 @@ import { log } from "../utils/logger.js";
 import { config } from "../config.js";
 import { normalizeCedula } from "../utils/normalize.js";
 import { extraerFormulario } from "../ingest/extractor.js";
-import { leerPoliza, leerCatalogo, leerPendientes, leerPreautorizacion } from "../notion/readers.js";
+import { leerPoliza, leerCatalogo, leerPendientes, leerPreautorizacion, listarPrestadores } from "../notion/readers.js";
 import {
   escribirPreautorizacion,
   actualizarPreautorizacion,
@@ -69,7 +69,7 @@ export async function ingresarSolicitud(pdfBytes, adjuntos = []) {
 // Punto de entrada del cron: procesa todas las filas Pendiente.
 export async function procesarPendientes() {
   const pendientes = await leerPendientes();
-  log.info(`📋 ${pendientes.length} solicitud(es) pendiente(s) por procesar`);
+  log.info(`${pendientes.length} solicitud(es) pendiente(s) por procesar`);
   for (const p of pendientes) {
     try {
       await procesarInforme(p.id);
@@ -141,6 +141,7 @@ export async function procesarInforme(pageId, { emitir = () => {} } = {}) {
 
   const poliza = await leerPoliza(solicitud.cedula);
   const catalogo = await leerCatalogo();
+  const prestadores = await listarPrestadores();
 
   // Fase 2 · Interpretación clínica (una sola llamada).
   emitirPaso("N1b", "Interpretación clínica", "ia", "active");
@@ -168,7 +169,7 @@ export async function procesarInforme(pageId, { emitir = () => {} } = {}) {
 
   // Fase 3 · Reglas R1-R12.
   emitirPaso("N3", "Reglas evaluadas", "det", "active");
-  const reglas = aplicarReglas({ solicitud, poliza, catalogo, interpretacion: ia.interpretacion || {} });
+  const reglas = aplicarReglas({ solicitud, poliza, catalogo, interpretacion: ia.interpretacion || {}, prestadores });
   const aprobadas = reglas.decision === "APROBADO" || reglas.decision === "APROBADO_CON_CONDICION";
   emitirPaso("N3", "Reglas evaluadas", "det", aprobadas ? "done" : "fail");
 
@@ -283,6 +284,6 @@ async function finalizar({
 
   emitir({ type: "resultado", data: resultado });
   emitir({ type: "fin" });
-  log.ok(`✅ ${fila.idSolicitud || fila.id} → ${decision} (${latenciaMs} ms)`);
+  log.ok(`${fila.idSolicitud || fila.id} → ${decision} (${latenciaMs} ms)`);
   return resultado;
 }

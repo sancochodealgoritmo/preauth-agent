@@ -1,15 +1,5 @@
 import { config } from "../config.js";
 
-// Prestadores conocidos (los 6 del formulario PREAUTH-GEN-1.0 y de Red hospitalaria).
-const PRESTADORES_CONOCIDOS = [
-  "Hospital Nacional",
-  "Hospital Punta Pacífica",
-  "Clínica Hospital San Fernando",
-  "Hospital Paitilla",
-  "Hospital Chiriquí",
-  "Centro Médico Paraíso",
-];
-
 function sumarMeses(fechaISO, meses) {
   if (!fechaISO) return "";
   const [anio, mes, dia] = fechaISO.split("-").map(Number);
@@ -36,7 +26,7 @@ export function precheckR0(solicitud) {
 }
 
 // Motor de reglas R1-R12. Función pura: no llama a Notion ni al LLM.
-export function aplicarReglas({ solicitud, poliza, catalogo, interpretacion }) {
+export function aplicarReglas({ solicitud, poliza, catalogo, interpretacion, prestadores = [] }) {
   const trazas = [];
   const ok = (paso, detalle) => trazas.push({ paso, ok: true, detalle });
   const falla = (paso, detalle, decision, motivo, extra = {}) => {
@@ -99,8 +89,8 @@ export function aplicarReglas({ solicitud, poliza, catalogo, interpretacion }) {
   const enRed = (poliza.redHospitalaria || []).some(
     (r) => r.trim().toLowerCase() === prestador.toLowerCase()
   );
-  const conocido = PRESTADORES_CONOCIDOS.some(
-    (r) => r.trim().toLowerCase() === prestador.toLowerCase()
+  const conocido = (prestadores || []).some(
+    (p) => String(p.nombre || "").trim().toLowerCase() === prestador.toLowerCase()
   );
   let modalidad = "No aplica";
   if (enRed) {
