@@ -282,3 +282,25 @@ export async function resolverEscalado(pageId, nota) {
     })
   );
 }
+
+// ── Reenvío documental: devuelve un caso Reenviado a Pendiente ────
+
+export async function reenviarPreautorizacion(pageId) {
+  const page = await consultarNotion(() => notion.pages.retrieve({ page_id: pageId }));
+  const estado = extraer.select(page.properties["Estado"]);
+  const decision = extraer.select(page.properties["Decisión"]);
+  if (estado !== "Reenviado" && decision !== "DOCUMENTOS_FALTANTES") {
+    throw new Error("La solicitud no está pendiente de documentos");
+  }
+  const iteracion = extraer.number(page.properties["Iteración"]) ?? 1;
+  const nuevaIteracion = Math.min(iteracion + 1, config.maxIteraciones);
+  return consultarNotion(() =>
+    notion.pages.update({
+      page_id: pageId,
+      properties: {
+        "Estado": seleccion("Pendiente"),
+        "Iteración": numero(nuevaIteracion),
+      },
+    })
+  );
+}

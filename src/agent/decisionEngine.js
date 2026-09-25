@@ -9,6 +9,7 @@ import {
   construirPropiedadesEntrada,
   construirPropiedadesDecision,
   subirArchivoNotion,
+  buscarPorId,
 } from "../notion/writers.js";
 import { precheckR0, aplicarReglas } from "../rules/businessRules.js";
 import { analizarSolicitud } from "./deepseek.js";
@@ -17,6 +18,11 @@ import { armarRespuestas } from "../templates/messages.js";
 const sel = (v) => ({ select: { name: v } });
 const num = (v) => ({ number: v });
 const archivos = (arr) => ({ files: arr || [] });
+
+// Anti-solapamiento: evita que el cron se ejecute dos veces a la vez (sweep)
+// y que cron + webhook procesen la misma página en paralelo (página en curso).
+let procesandoPendientes = false;
+const enProceso = new Set();
 
 function parsearExtraccion(txt) {
   try {
@@ -37,6 +43,12 @@ export async function ingresarSolicitud(pdfBytes, adjuntos = []) {
   const idSolicitud = extraido.propiedades["ID Solicitud"];
   const iteracion = 1;
   const id = `PA-${idSolicitud}-${iteracion}`;
+
+  // Idempotencia: si la solicitud ya fue ingresada, devolverla sin resubir archivos.
+  const existente = await buscarPorId(id);
+  if (existente) {
+    return { id: existente.id, idSolicitud, iteracion, faltantes: extraido.faltantes, existente: true };
+  }
 
   const pdfFile = await subirArchivoNotion(pdfBytes, `formulario-${idSolicitud}.pdf`);
   const adjFiles = [];
@@ -68,27 +80,48 @@ export async function ingresarSolicitud(pdfBytes, adjuntos = []) {
 
 // Punto de entrada del cron: procesa todas las filas Pendiente.
 export async function procesarPendientes() {
-  const pendientes = await leerPendientes();
-  log.info(`${pendientes.length} solicitud(es) pendiente(s) por procesar`);
-  for (const p of pendientes) {
-    try {
-      await procesarInforme(p.id);
-    } catch (e) {
-      log.error(`Error procesando ${p.idSolicitud || p.id}: ${e.message}`);
+  if (procesandoPendientes) return;
+  procesandoPendientes = true;
+  try {
+    const pendientes = await leerPendientes();
+    log.info(`${pendientes.length} solicitud(es) pendiente(s) por procesar`);
+    for (const p of pendientes) {
+      try {
+        await procesarInforme(p.id);
+      } catch (e) {
+        log.error(`Error procesando ${p.idSolicitud || p.id}: ${e.message}`);
+      }
     }
+  } finally {
+    procesandoPendientes = false;
   }
 }
 
 // Motor de decisión v1.5 (Fases 1 a 5) sobre una fila ya ingerida.
 export async function procesarInforme(pageId, { emitir = () => {} } = {}) {
+  // Anti-solapamiento por página: si ya está en curso, no procesar de nuevo.
+  if (enProceso.has(pageId)) return { id: pageId, skip: true };
+  enProceso.add(pageId);
+
   const t0 = Date.now();
   const emitirPaso = (id, nm, tipo, estado) =>
     emitir({ type: "paso", id, nm, tipo, ms: Date.now() - t0, estado });
 
   emitirPaso("N0", "Solicitud leída", "det", "active");
   const fila = await leerPreautorizacion(pageId);
+
+  // Guard de estado: no reprocesar casos ya resueltos o escalados.
+  if (!["Pendiente", "Reenviado"].includes(fila.estado)) {
+    enProceso.delete(pageId);
+    emitirPaso("N0", `Caso ya procesado (${fila.estado})`, "det", "skip");
+    emitir({ type: "fin" });
+    return { id: pageId, decision: fila.decision, estado: fila.estado, skip: true };
+  }
+
   emitir({ type: "informe", texto: fila.justificacion || "" });
   emitirPaso("N0", "Solicitud leída", "det", "done");
+
+  try {
 
   const extra = parsearExtraccion(fila.extraccionCruda);
   const solicitud = {
@@ -192,6 +225,9 @@ export async function procesarInforme(pageId, { emitir = () => {} } = {}) {
     motivo: reglas.motivo,
     emitir, t0,
   });
+  } finally {
+    enProceso.delete(pageId);
+  }
 }
 
 async function finalizar({

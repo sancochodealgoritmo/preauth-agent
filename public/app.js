@@ -101,7 +101,7 @@ function pintarTabla(data) {
     return;
   }
   $('#tabla').innerHTML = `<div class="tablewrap"><table>
-    <thead><tr><th>Caso</th><th>Afiliado</th><th>Decisión</th><th>Modalidad</th><th>Modelo</th><th>Tiempo</th></tr></thead>
+    <thead><tr><th>Caso</th><th>Afiliado</th><th>Decisión</th><th>Modalidad</th><th>Modelo</th><th>Tiempo</th><th></th></tr></thead>
     <tbody>${data.map((d) => `<tr data-id="${d.id}">
       <td style="font-family:var(--mono);font-size:12px">${escapar(d.idSolicitud || '—')}</td>
       <td>${escapar(d.paciente || '—')}</td>
@@ -109,23 +109,43 @@ function pintarTabla(data) {
       <td>${escapar(d.modalidad || '—')}</td>
       <td>${d.modelo ? `<span class="model-badge ${d.modelo}">${escapar(d.modelo)}</span>` : '—'}</td>
       <td style="font-family:var(--mono)">${d.latencia_ms ? (d.latencia_ms / 1000).toFixed(2) + ' s' : (d.timestamp ? new Date(d.timestamp).toLocaleTimeString() : '—')}</td>
+      <td>${d.decision === 'DOCUMENTOS_FALTANTES' ? `<button class="btn-ghost btn-reenviar" data-id="${d.id}" style="width:auto;padding:4px 8px">Reenviar</button>` : ''}</td>
     </tr>`).join('')}</tbody></table></div>`;
 
-  document.querySelectorAll('#tabla tr[data-id]').forEach((tr) => tr.onclick = async () => {
-    try {
-      const res = await fetch(`/api/casos/${tr.dataset.id}`);
-      const detalle = await res.json();
-      pintarResultado(detalle);
-      pintarExtraccion(detalle.extraccion || {});
-      pintarInterpretacion(detalle.interpretacion || {});
-      pintarReglas(detalle.trazas || []);
-      $('#docText').textContent = detalle.texto_informe || '(sin texto)';
-      $('#traceCard').classList.remove('hide');
-      $('#resCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } catch (e) {
-      console.error(e);
-    }
+  document.querySelectorAll('#tabla tr[data-id]').forEach((tr) => {
+    tr.onclick = async () => {
+      try {
+        const res = await fetch(`/api/casos/${tr.dataset.id}`);
+        const detalle = await res.json();
+        pintarResultado(detalle);
+        pintarExtraccion(detalle.extraccion || {});
+        pintarInterpretacion(detalle.interpretacion || {});
+        pintarReglas(detalle.trazas || []);
+        $('#docText').textContent = detalle.texto_informe || '(sin texto)';
+        $('#traceCard').classList.remove('hide');
+        $('#resCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    const btn = tr.querySelector('.btn-reenviar');
+    if (btn) btn.onclick = async (ev) => {
+      ev.stopPropagation();
+      await reenviar(btn.dataset.id);
+    };
   });
+}
+
+async function reenviar(id) {
+  if (!confirm('¿Reenviar esta solicitud con los documentos corregidos?')) return;
+  const r = await fetch(`/api/solicitudes/${id}/reenviar`, { method: 'POST' });
+  if (!r.ok) {
+    const j = await r.json().catch(() => ({}));
+    alert('Error al reenviar: ' + (j.error || r.status));
+    return;
+  }
+  alert('Solicitud reenviada para reprocesamiento.');
+  cargarCasos();
 }
 
 /* ── Enviar formulario ─────────────────────────────────────────── */

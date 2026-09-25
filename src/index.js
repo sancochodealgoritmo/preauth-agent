@@ -5,10 +5,12 @@ import { randomBytes } from "node:crypto";
 import cron from "node-cron";
 import multer from "multer";
 import { config } from "./config.js";
+import { notion, consultarNotion } from "./notion/client.js";
 import { log } from "./utils/logger.js";
 import { bus } from "./events/bus.js";
 import { procesarConTraza } from "./agent/tracedEngine.js";
 import { procesarPendientes, ingresarSolicitud } from "./agent/decisionEngine.js";
+import { reenviarPreautorizacion } from "./notion/writers.js";
 import { listarSolicitudesRecientes, getDetalleSolicitud } from "./notion/dashboardReader.js";
 import { adminRouter } from "./api/admin.js";
 import { revisionRouter } from "./api/revision.js";
@@ -56,6 +58,16 @@ app.post(
     }
   }
 );
+
+// Reenvío documental: devuelve un caso Reenviado a Pendiente con Iteración+1.
+app.post("/api/solicitudes/:pageId/reenviar", async (req, res) => {
+  try {
+    await reenviarPreautorizacion(req.params.pageId);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
 
 app.get("/api/casos", async (req, res) => {
   try { res.json(await listarSolicitudesRecientes(50)); }
@@ -108,8 +120,11 @@ app.post("/webhook/notion", async (req, res) => {
   try {
     const pageId = req.body?.entity?.id || req.body?.page_id;
     if (pageId) {
-      const caseId = "CASE-" + randomBytes(4).toString("hex").toUpperCase();
-      await procesarConTraza(caseId, pageId);
+      const page = await consultarNotion(() => notion.pages.retrieve({ page_id: pageId }));
+      if (page?.parent?.database_id === config.notion.databases.preautorizaciones) {
+        const caseId = "CASE-" + randomBytes(4).toString("hex").toUpperCase();
+        await procesarConTraza(caseId, pageId);
+      }
     }
   } catch (e) { log.error("Webhook error:", e.message); }
 });
