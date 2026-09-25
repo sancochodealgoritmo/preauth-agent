@@ -26,12 +26,13 @@
 
   <div>
     <div class="card">
-      <h2>Enviar formulario</h2>
-      <label for="frm">Formulario PREAUTH-GEN-1.0 (PDF)</label>
-      <input type="file" id="frm" accept="application/pdf">
-      <label for="adj">Adjuntos (PDF, opcional)</label>
-      <input type="file" id="adj" accept="application/pdf" multiple>
-      <button class="btn" id="enviar">Enviar solicitud</button>
+      <h2>Enviar formularios</h2>
+      <div id="dropzone" class="dropzone">
+        <p>Arrastra aquí los formularios PREAUTH-GEN-1.0 (PDF)<br>o haz clic para seleccionarlos</p>
+        <input type="file" id="frm" multiple accept="application/pdf" style="display:none">
+      </div>
+      <div id="fileList" class="filelist"></div>
+      <button class="btn" id="enviar" disabled>Enviar solicitudes</button>
       <a href="/formulario" download style="display:inline-block;margin-top:10px;color:var(--accent);font-size:13px;font-weight:600;text-decoration:none">⬇️ Descargar formulario PREAUTH-GEN-1.0</a>
     </div>
 

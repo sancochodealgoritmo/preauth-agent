@@ -95,6 +95,13 @@ tbody tr:hover td{background:#fafbfc;cursor:pointer}
 .pill.PENDIENTE{background:var(--ia-bg);color:var(--ia)}
 .pill.cola{background:var(--ia-bg);color:var(--ia);animation:pulse 1.2s ease-in-out infinite}
 .estado-cola{margin-left:12px;font-size:12.5px;color:var(--ia);font-weight:600;animation:pulse 1.2s ease-in-out infinite}
+.dropzone{border:2px dashed var(--line);border-radius:10px;padding:26px 16px;text-align:center;color:var(--muted);font-size:13.5px;cursor:pointer;transition:border-color .15s ease,background .15s ease}
+.dropzone.drag,.dropzone:hover{border-color:var(--accent);background:var(--accent-soft)}
+.dropzone p{margin:0}
+.filelist{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.fileitem{display:flex;align-items:center;justify-content:space-between;background:#f3f5f8;border:1px solid var(--line);border-radius:7px;padding:7px 10px;font-size:13px}
+.fileitem span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fileitem-x{border:none;background:transparent;color:var(--no);font-size:16px;line-height:1;cursor:pointer;padding:0 4px}
 .empty{padding:24px;text-align:center;color:var(--muted);font-size:13.5px}
 footer{max-width:1180px;margin:0 auto;padding:0 18px 40px;font-size:12px;color:var(--muted)}
 .model-badge{display:inline-block;font-size:10.5px;padding:1px 7px;border-radius:20px;font-weight:700;background:#eef0f3;color:#5f6368;margin-left:6px}

@@ -163,29 +163,66 @@ $('#reenviarFiles').addEventListener('change', async (ev) => {
   cargarCasos();
 });
 
-/* ── Enviar formulario ─────────────────────────────────────────── */
-async function enviarFormulario() {
-  const frm = $('#frm').files[0];
-  if (!frm) { alert('Selecciona el formulario PDF'); return; }
-  const fd = new FormData();
-  fd.append('formulario', frm);
-  for (const f of $('#adj').files) fd.append('adjuntos', f);
-  $('#enviar').disabled = true;
-  try {
-    const r = await fetch('/api/solicitudes', { method: 'POST', body: fd });
-    const j = await r.json();
-    if (!r.ok) throw new Error(j.error || 'HTTP ' + r.status);
-    alert('Solicitud recibida: ' + j.idSolicitud + ' — el agente la procesará automáticamente.');
-    $('#frm').value = ''; $('#adj').value = '';
-    cargarCasos();
-  } catch (e) {
-    alert('Error al enviar: ' + e.message);
+/* ── Enviar formularios (múltiple, arrastrar y soltar) ─────────── */
+let archivos = [];
+
+function pintarArchivos() {
+  const lista = $('#fileList');
+  if (!archivos.length) {
+    lista.innerHTML = '';
+    $('#enviar').disabled = true;
+    return;
   }
+  lista.innerHTML = archivos.map((f, i) => `<div class="fileitem"><span>${escapar(f.name)}</span><button class="fileitem-x" data-i="${i}" type="button">×</button></div>`).join('');
   $('#enviar').disabled = false;
+  lista.querySelectorAll('.fileitem-x').forEach((b) =>
+    b.onclick = () => { archivos.splice(Number(b.dataset.i), 1); pintarArchivos(); }
+  );
+}
+
+function agregarArchivos(fileList) {
+  for (const f of fileList) {
+    if (f.type !== 'application/pdf') continue;
+    archivos.push(f);
+  }
+  pintarArchivos();
+}
+
+const dz = $('#dropzone');
+if (dz) {
+  dz.onclick = () => $('#frm').click();
+  dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('drag'); };
+  dz.ondragleave = () => dz.classList.remove('drag');
+  dz.ondrop = (e) => { e.preventDefault(); dz.classList.remove('drag'); agregarArchivos(e.dataTransfer.files); };
+  $('#frm').onchange = () => { agregarArchivos($('#frm').files); $('#frm').value = ''; };
+}
+
+async function enviarFormularios() {
+  if (!archivos.length) return;
+  $('#enviar').disabled = true;
+  const total = archivos.length;
+  let ok = 0;
+  for (let i = 0; i < total; i++) {
+    const f = archivos[i];
+    const fd = new FormData();
+    fd.append('formulario', f);
+    try {
+      const r = await fetch('/api/solicitudes', { method: 'POST', body: fd });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || 'HTTP ' + r.status);
+      ok++;
+    } catch (e) {
+      alert(`Error en "${f.name}": ` + e.message);
+    }
+  }
+  alert(`Enviadas ${ok}/${total} solicitudes. El agente las procesará automáticamente.`);
+  archivos = [];
+  pintarArchivos();
+  cargarCasos();
 }
 
 /* ── Arranque ─────────────────────────────────────────────────── */
-$('#enviar').onclick = enviarFormulario;
+$('#enviar').onclick = enviarFormularios;
 $('#refresh-list').onclick = cargarCasos;
 
 cargarCasos();
